@@ -1,0 +1,13 @@
+# Secrets / local config
+.env
+.python-version
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Generated output (keep these local, not in git)
+drafts/
+data/leads.csv
+data/suppression.csv

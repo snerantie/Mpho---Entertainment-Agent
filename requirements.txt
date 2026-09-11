@@ -1,0 +1,9 @@
+# Core (no paid keys required to run)
+python-dotenv>=1.0.0
+requests>=2.31.0
+rich>=13.7.0
+
+# Optional integrations (only needed when you enable them)
+# openai>=1.30.0        # for LLM proposal generation (or use anthropic)
+# anthropic>=0.30.0     # alternative LLM provider
+# gspread>=6.0.0        # for Google Sheets dashboard instead of CSV
