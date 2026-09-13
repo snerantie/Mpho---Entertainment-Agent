@@ -1,4 +1,4 @@
-# SA Brand Leads — outreach automation
+# Mpho — Entertainment Agent
 
 Automates the lead-gen → outreach pipeline for **South African entertainment
 brands** (alcohol, film/TV, fashion):
@@ -7,26 +7,43 @@ brands** (alcohol, film/TV, fashion):
 2. **Find** decision-maker emails (Hunter.io, with a name-pattern fallback)
 3. **Write** a personalised proposal per lead (LLM, with a template fallback)
 4. **Draft or send** the email (safe *draft* mode by default)
-5. **Track** every lead's status in a CSV dashboard
+5. **Track** every lead's status in a dashboard
 
 > It runs **end-to-end with zero API keys** using built-in fallbacks. Add keys
-> in `.env` to upgrade quality.
+> to upgrade quality — right from the web app, no files to edit.
 
-## Quick start
+## 🖱️ No-code: the web app (recommended)
+
+Everything is clickable — no terminal commands after launch.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+streamlit run app.py
+```
 
-cp .env.example .env      # optional — fill in what you have
+Then use the tabs in your browser:
+
+| Tab | What you do |
+|-----|-------------|
+| ⚙️ **Setup** | Enter your name/company + optional API keys; choose Draft or Send mode |
+| 🏢 **Companies** | Add/edit target brands in a spreadsheet-style table |
+| ✍️ **Pitch** | Write what you're offering (used in every proposal) |
+| ▶️ **Run** | Click **Find contacts**, then **Generate proposals** |
+| 📧 **Drafts** | Preview each proposal before it goes out |
+| 🚫 **Do-not-contact** | Manage opt-outs / excluded addresses |
+
+## ⌨️ Power users: the command line
+
+```bash
 python run.py all         # find contacts, then draft proposals
 python run.py status      # see the dashboard
 ```
 
 Generated emails land in `drafts/*.eml` for you to review. **Nothing is sent
-until you set `SEND_MODE=smtp`** and provide SMTP credentials.
+until you switch to Send mode** (Setup tab) and provide email-server details.
 
-## Commands
+### CLI commands
 
 | Command | What it does |
 |---------|--------------|
@@ -36,13 +53,14 @@ until you set `SEND_MODE=smtp`** and provide SMTP credentials.
 | `python run.py status` | Print a table of all leads |
 | `python run.py suppress <email>` | Add to the do-not-contact list |
 
-## Where to edit things
+## Where things live
 
-- **Target companies** → `data/companies.csv` (add rows; `contact` column is an
-  optional known decision-maker name from LinkedIn)
-- **Your offer / pitch angle** → `OFFER` and `CATEGORY_ANGLE` in `src/proposal.py`
-- **Your identity + limits** → `.env` (`SENDER_*`, `DAILY_SEND_LIMIT`)
-- **Do-not-contact list** → `data/suppression.csv` (auto-managed)
+Prefer the **web app** for all of this — but under the hood:
+
+- **Target companies** → `data/companies.csv` (Companies tab)
+- **Your offer / pitch angle** → `data/pitch.json` (Pitch tab)
+- **Your identity + keys + limits** → `.env` (Setup tab)
+- **Do-not-contact list** → `data/suppression.csv` (Do-not-contact tab, auto-managed)
 
 ## How the fallbacks work
 

@@ -6,18 +6,19 @@ usable drafts with zero keys.
 """
 from __future__ import annotations
 
-from config import settings
+import json
+
+from config import settings, PITCH_JSON
 from .models import Company, Lead
 from . import compliance
 
-# What you're pitching. Edit this to describe YOUR offer.
-OFFER = (
+# Built-in defaults, used if data/pitch.json is missing or invalid.
+DEFAULT_OFFER = (
     "a creative partnership that connects your brand with South African "
     "entertainment audiences through culturally-relevant campaigns, "
     "activations, and content."
 )
-
-CATEGORY_ANGLE = {
+DEFAULT_CATEGORY_ANGLE = {
     "alcohol": (
         "Alcohol brands win in SA by owning moments — music, sport, and "
         "nightlife. We build responsible, standout activations that drive "
@@ -36,6 +37,28 @@ CATEGORY_ANGLE = {
 }
 
 
+def load_pitch() -> tuple[str, dict]:
+    """Read the editable pitch (offer + per-category angle) from pitch.json.
+
+    Falls back to the built-in defaults if the file is missing/invalid.
+    """
+    try:
+        data = json.loads(PITCH_JSON.read_text(encoding="utf-8"))
+        offer = data.get("offer") or DEFAULT_OFFER
+        angle = data.get("category_angle") or DEFAULT_CATEGORY_ANGLE
+        return offer, angle
+    except Exception:
+        return DEFAULT_OFFER, dict(DEFAULT_CATEGORY_ANGLE)
+
+
+def save_pitch(offer: str, category_angle: dict) -> None:
+    PITCH_JSON.write_text(
+        json.dumps({"offer": offer, "category_angle": category_angle},
+                   indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
 def _greeting(lead: Lead) -> str:
     if lead.contact_name:
         first = lead.contact_name.split()[0]
@@ -46,14 +69,15 @@ def _greeting(lead: Lead) -> str:
 def template_proposal(lead: Lead) -> tuple[str, str]:
     """Return (subject, body) built from the template."""
     s = settings.sender
-    angle = CATEGORY_ANGLE.get(lead.category, "")
+    offer, category_angle = load_pitch()
+    angle = category_angle.get(lead.category, "")
     subject = f"Partnership idea for {lead.company}"
     body = f"""{_greeting(lead)}
 
 I'm {s.name} from {s.company}. I've been following what {lead.company} is
 doing and think there's a strong opportunity to work together.
 
-We offer {OFFER}
+We offer {offer}
 
 {angle}
 
@@ -68,6 +92,7 @@ open to a 20-minute call in the next week or two?
 
 def _llm_prompt(lead: Lead) -> str:
     s = settings.sender
+    offer, category_angle = load_pitch()
     return f"""Write a concise, warm B2B outreach email (max ~180 words).
 
 From: {s.name}, {s.company} ({s.website})
@@ -75,8 +100,8 @@ To: {lead.contact_name or 'a marketing decision-maker'} \
 ({lead.role or 'unknown role'}) at {lead.company}, a South African \
 {lead.category.replace('_', '/')} brand.
 
-Our offer: {OFFER}
-Relevant angle: {CATEGORY_ANGLE.get(lead.category, '')}
+Our offer: {offer}
+Relevant angle: {category_angle.get(lead.category, '')}
 
 Rules:
 - Personalise to the company; do NOT invent specific facts or campaigns.
